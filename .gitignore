@@ -178,6 +178,9 @@ csx/
 ecf/
 rcf/
 
+
+.vs/
+
 # Windows Store app package directories and files
 AppPackages/
 BundleArtifacts/
@@ -286,3 +289,4 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+

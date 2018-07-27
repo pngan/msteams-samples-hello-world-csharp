@@ -27,7 +27,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 }
                 else
                 {
-                    await EchoBot.EchoMessage(connector, activity);
+                    //var eb = new EchoBot();
+                    //await eb.EchoMessage(connector, activity);
+                    var eb = new ProcessMessageBot();
+                    await eb.ProcessMessage(connector, activity);
                     return new HttpResponseMessage(HttpStatusCode.Accepted);
                 }
             }

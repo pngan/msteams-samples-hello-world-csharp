@@ -37,39 +37,54 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
     }
     public class ProcessMessageBot
     {
-        private bool m_isLoggedIn;
+        private const string IsLoggedInProperty = "IsLoggedIn";
+
         public async Task ProcessMessage(ConnectorClient connector, Activity activity)
         {
+            StateClient stateClient = activity.GetStateClient();
+            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
+            bool isLoggedIn = userData.GetProperty<bool>(IsLoggedInProperty);
+            if (userData.Data == null)
+            {
+                userData.SetProperty(IsLoggedInProperty, false);
+            }
+
             if (activity.Type == ActivityTypes.Message)
             {
-                Activity reply = null;
+                var replyMessage = string.Empty;
 
                 if (string.Compare(activity.GetTextWithoutMentions(), "login", StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    if (m_isLoggedIn)
+                    if (isLoggedIn)
                     {
-                        reply = activity.CreateReply($"You are already logged in; no action needed.");
+                        replyMessage = "You are already logged in; no action needed.";
                     }
                     else
                     {
-                        reply = activity.CreateReply($"You are now logged in.");
-                        m_isLoggedIn = true;
+                        replyMessage = "You are now logged in.";
+                        userData.SetProperty(IsLoggedInProperty, true);
+                        await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                     }
                 }
                 if (string.Compare(activity.GetTextWithoutMentions(), "logout", StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    if (m_isLoggedIn)
+                    if (isLoggedIn)
                     {
-                        reply = activity.CreateReply($"You have been logged out.");
+                        replyMessage = "You have been logged out.";
+                        userData.SetProperty(IsLoggedInProperty, false);
+                        await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                     }
                     else
                     {
-                        reply = activity.CreateReply($"You are already logged out; no action needed.");
-                        m_isLoggedIn = true;
+                        replyMessage = "You are already logged out; no action needed.";
                     }
                 }
-                if (reply != null)
+
+                if (!string.IsNullOrEmpty(replyMessage))
+                {
+                    var reply = activity.CreateReply(replyMessage);
                     await connector.Conversations.ReplyToActivityWithRetriesAsync(reply);
+                }
             }
         }
     }

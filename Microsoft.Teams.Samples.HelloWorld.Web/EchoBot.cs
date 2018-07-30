@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Threading;
+using System.Configuration;
 using System.Threading.Tasks;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams;
+using Microsoft.ServiceBus.Messaging;
+using Newtonsoft.Json;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web
 {
@@ -35,6 +35,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
             }
         }
     }
+
     public class ProcessMessageBot
     {
         private const string IsLoggedInProperty = "IsLoggedIn";
@@ -80,11 +81,33 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
                     }
                 }
 
-                if (!string.IsNullOrEmpty(replyMessage))
+                // Send message to service bus
+                try
                 {
-                    var reply = activity.CreateReply(replyMessage);
-                    await connector.Conversations.ReplyToActivityWithRetriesAsync(reply);
+                    var topic = TopicClient.CreateFromConnectionString(
+                        ConfigurationManager.AppSettings["ServiceBusConnection"],
+                        "agentstatetopic");
+
+
+                    var stateChangeMessage = new AgentStateChange
+                    {
+                        StateChangeMessage = replyMessage,
+                        Activity = JsonConvert.SerializeObject(activity)
+                    };
+                    await topic.SendAsync(new BrokeredMessage(stateChangeMessage));
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+
+
+                //if (!string.IsNullOrEmpty(replyMessage))
+                //{
+                //    var reply = activity.CreateReply(replyMessage + " (local)");
+                //    await connector.Conversations.ReplyToActivityWithRetriesAsync(reply);
+                //}
             }
         }
     }

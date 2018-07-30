@@ -1,4 +1,5 @@
-﻿using System.Web.Http;
+﻿using System.Configuration;
+using System.Web.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -20,6 +21,9 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
             };
 
             // Web API configuration and services
+
+            ConfigurationManager.AppSettings["MicrosoftAppId"] = "debbac0a-653b-45fc-94c9-2bc97b478695";
+            ConfigurationManager.AppSettings["MicrosoftAppPassword"] = "pdnEKF3642;mitmPBGH2]^}";
 
             // Web API routes
             config.MapHttpAttributeRoutes();
